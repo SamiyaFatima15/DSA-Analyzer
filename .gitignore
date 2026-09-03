@@ -1,0 +1,9 @@
+# Database (contains user data — should not be shared publicly)
+backend/dsa_analyzer.db
+
+# Python cache files
+backend/__pycache__/
+*.pyc
+
+# Environment/secrets (if you ever create a .env file)
+.env

@@ -1,0 +1,42 @@
+body {
+    background-color: #f5f7fb;
+}
+
+
+.code-box {
+    font-family: monospace;
+    font-size: 14px;
+    background-color: #1e1e1e;
+    color: white;
+}
+
+
+textarea {
+    resize: vertical;
+}
+
+
+.result-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+    height: 100%;
+}
+
+
+.result-card h5 {
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+
+.result-card p {
+    color: #555;
+    line-height: 1.6;
+}
+
+
+#resultSection {
+    margin-bottom: 80px;
+}
