@@ -704,7 +704,8 @@
 <script>
 (function(){
 
-  var BACKEND_URL = "http://127.0.0.1:8000/analyze";
+  var API_BASE = "https://dsa-analyzer-im50.onrender.com";
+  var BACKEND_URL = API_BASE + "/analyze";
 
   // ---------- toast notifications (replaces jarring alert() popups) ----------
   function showToast(message, type){
@@ -785,7 +786,7 @@
     hintBtn.disabled = true;
     hintBtn.querySelector('span:last-child').textContent = 'thinking…';
 
-    fetch("http://127.0.0.1:8000/hint", {
+    fetch(API_BASE + "/hint", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -886,7 +887,7 @@
 
     compareResults.innerHTML = '<p style="color:var(--text-faint); font-family:var(--font-mono); font-size:12px;">Comparing...</p>';
 
-    fetch("http://127.0.0.1:8000/compare", {
+    fetch(API_BASE + "/compare", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ problem: problem || '(no problem given)', solutions: solutions })
@@ -990,7 +991,7 @@
 
     var endpoint = isSignupMode ? '/signup' : '/login';
 
-    fetch('http://127.0.0.1:8000' + endpoint, {
+    fetch(API_BASE + endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: username, password: password })
@@ -1146,7 +1147,7 @@
     dashboardContent.innerHTML = '<p style="color:var(--text-faint); font-family:var(--font-mono); font-size:13px;">Loading...</p>';
 
     var user = getCurrentUser();
-    var url = "http://127.0.0.1:8000/stats";
+    var url = API_BASE + "/stats";
     if (user) url += "?user_id=" + user.user_id;
 
     fetch(url)
@@ -1244,7 +1245,7 @@
 
   function showPatternDetail(pattern){
     var user = getCurrentUser();
-    var url = "http://127.0.0.1:8000/history?pattern=" + encodeURIComponent(pattern) + "&limit=50";
+    var url = API_BASE + "/history?pattern=" + encodeURIComponent(pattern) + "&limit=50";
     if (user) url += "&user_id=" + user.user_id;
 
     var detailBox = document.getElementById('patternDetail');
@@ -1309,7 +1310,7 @@
     historyList.innerHTML = '<p style="color:var(--text-faint); font-family:var(--font-mono); font-size:13px;">Loading...</p>';
 
     var user = getCurrentUser();
-    var url = "http://127.0.0.1:8000/history";
+    var url = API_BASE + "/history";
     if (user) url += "?user_id=" + user.user_id;
 
     fetch(url)
