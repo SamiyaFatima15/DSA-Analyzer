@@ -429,6 +429,33 @@
 
 <body>
 
+  <!-- Auth gate — lives OUTSIDE #appContent so it's always visible until login -->
+  <div id="authOverlay" class="hidden" style="position:fixed; inset:0; background:rgba(10,14,20,0.9); backdrop-filter:blur(6px); z-index:500; display:flex; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--panel); border:1px solid var(--border); border-top:3px solid var(--blue); border-radius:14px; max-width:360px; width:100%; padding:26px; box-shadow:0 40px 80px -20px rgba(0,0,0,0.7);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <h3 id="authTitle" style="font-family:var(--font-display); margin:0; font-size:18px;">Log in</h3>
+        <button id="closeAuthBtn" style="background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <p id="authGateMsg" style="color:var(--text-faint); font-size:12.5px; margin:0 0 16px;">Log in or sign up to use the DSA Code Analyzer.</p>
+
+      <input id="authUsername" placeholder="Username" style="width:100%; padding:10px 12px; margin-bottom:10px; background:var(--panel-alt); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--font-body); font-size:14px; outline:none;">
+      <input id="authPassword" type="password" placeholder="Password" style="width:100%; padding:10px 12px; margin-bottom:14px; background:var(--panel-alt); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--font-body); font-size:14px; outline:none;">
+
+      <p id="authError" class="hidden" style="color:var(--coral); font-size:12.5px; margin:-6px 0 12px;"></p>
+
+      <button id="authSubmitBtn" class="btn-run" style="width:100%; justify-content:center;">
+        <span id="authSubmitLabel">Log in</span>
+      </button>
+
+      <p style="text-align:center; margin:16px 0 0; font-size:13px; color:var(--text-dim);">
+        <span id="authToggleText">Don't have an account?</span>
+        <a href="#" id="authToggleLink" style="color:var(--blue);">Sign up</a>
+      </p>
+    </div>
+  </div>
+
+  <div id="appContent">
+
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
   <div class="orb orb-3"></div>
@@ -648,29 +675,6 @@
   </div>
 
   <!-- Auth Modal -->
-  <div id="authOverlay" class="hidden" style="position:fixed; inset:0; background:rgba(10,14,20,0.75); backdrop-filter:blur(4px); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px;">
-    <div style="background:var(--panel); border:1px solid var(--border); border-top:3px solid var(--blue); border-radius:14px; max-width:360px; width:100%; padding:26px; box-shadow:0 40px 80px -20px rgba(0,0,0,0.7);">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
-        <h3 id="authTitle" style="font-family:var(--font-display); margin:0; font-size:18px;">Log in</h3>
-        <button id="closeAuthBtn" style="background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer;">✕</button>
-      </div>
-
-      <input id="authUsername" placeholder="Username" style="width:100%; padding:10px 12px; margin-bottom:10px; background:var(--panel-alt); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--font-body); font-size:14px; outline:none;">
-      <input id="authPassword" type="password" placeholder="Password" style="width:100%; padding:10px 12px; margin-bottom:14px; background:var(--panel-alt); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--font-body); font-size:14px; outline:none;">
-
-      <p id="authError" class="hidden" style="color:var(--coral); font-size:12.5px; margin:-6px 0 12px;"></p>
-
-      <button id="authSubmitBtn" class="btn-run" style="width:100%; justify-content:center;">
-        <span id="authSubmitLabel">Log in</span>
-      </button>
-
-      <p style="text-align:center; margin:16px 0 0; font-size:13px; color:var(--text-dim);">
-        <span id="authToggleText">Don't have an account?</span>
-        <a href="#" id="authToggleLink" style="color:var(--blue);">Sign up</a>
-      </p>
-    </div>
-  </div>
-
   <!-- Dashboard Side Panel -->
   <div id="dashboardOverlay" class="hidden" style="position:fixed; inset:0; background:rgba(10,14,20,0.5); backdrop-filter:blur(2px); z-index:100;">
     <div style="position:fixed; top:0; right:0; height:100vh; width:min(440px, 92vw); background:var(--panel); border-left:1px solid var(--border); border-top:3px solid var(--green); display:flex; flex-direction:column; box-shadow:-30px 0 60px -20px rgba(0,0,0,0.7);">
@@ -700,6 +704,8 @@
   <footer>
     built for people who read the constraints before the examples
   </footer>
+
+  </div>
 
 <script>
 (function(){
@@ -923,11 +929,28 @@
   // ---------- auth (login/signup/session) ----------
   var authOverlay = document.getElementById('authOverlay');
   var authArea = document.getElementById('authArea');
+  var appContent = document.getElementById('appContent');
   var isSignupMode = false;
 
   function getCurrentUser(){
     var raw = localStorage.getItem('dsa_user');
     return raw ? JSON.parse(raw) : null;
+  }
+
+  // Shows the login gate and hides the app if not logged in.
+  // Called on page load, after logout, and after successful login/signup.
+  function enforceAuthGate(){
+    var user = getCurrentUser();
+    if (user) {
+      authOverlay.classList.add('hidden');
+      appContent.classList.remove('hidden');
+    } else {
+      isSignupMode = false;
+      setAuthMode();
+      authOverlay.classList.remove('hidden');
+      appContent.classList.add('hidden');
+      document.getElementById('closeAuthBtn').style.display = 'none'; // can't dismiss — must log in
+    }
   }
 
   function renderAuthArea(){
@@ -939,6 +962,7 @@
       document.getElementById('logoutBtn').addEventListener('click', function(){
         localStorage.removeItem('dsa_user');
         renderAuthArea();
+        enforceAuthGate();
       });
     } else {
       authArea.innerHTML =
@@ -1004,8 +1028,8 @@
           return;
         }
         localStorage.setItem('dsa_user', JSON.stringify({ user_id: r.user_id, username: r.username }));
-        authOverlay.classList.add('hidden');
         renderAuthArea();
+        enforceAuthGate();
       })
       .catch(function(){
         errorEl.textContent = 'Could not reach the backend.';
@@ -1014,6 +1038,7 @@
   });
 
   renderAuthArea();
+  enforceAuthGate();
 
   // ---------- dashboard modal ----------
   var dashboardOverlay = document.getElementById('dashboardOverlay');
