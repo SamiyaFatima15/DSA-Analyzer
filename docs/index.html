@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSA Code Analyzer</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#1b2130;
+    --panel:#242b3c;
+    --panel-alt:#2a3244;
+    --border:#3a4459;
+    --border-soft:#323b4d;
+    --text:#eef1f6;
+    --text-dim:#9aa4ba;
+    --text-faint:#707a90;
+
+    --blue:#5cc8ff;
+    --green:#6ee7a8;
+    --amber:#ffb454;
+    --coral:#ff6b6b;
+    --purple:#c792ea;
+
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    margin:0;
+    position:relative;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(92,200,255,0.04), transparent 42%),
+      radial-gradient(circle at 88% 10%, rgba(199,146,234,0.03), transparent 45%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  body::before{
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size:42px 42px;
+    -webkit-mask-image:radial-gradient(circle at 50% 0%, black, transparent 65%);
+    mask-image:radial-gradient(circle at 50% 0%, black, transparent 65%);
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .orb{
+    position:fixed; border-radius:50%; filter:blur(80px);
+    pointer-events:none; z-index:0; opacity:0.22;
+    animation:drift 20s ease-in-out infinite;
+  }
+  .orb-1{ width:280px; height:280px; top:-80px; left:-60px; background:rgba(92,200,255,0.14); }
+  .orb-2{ width:240px; height:240px; top:120px; right:-80px; background:rgba(199,146,234,0.1); animation-delay:-6s; }
+  .orb-3{ width:220px; height:220px; bottom:-100px; left:35%; background:rgba(110,231,168,0.07); animation-delay:-11s; }
+
+  @keyframes drift{
+    0%, 100%{ transform:translate(0,0) scale(1); }
+    50%{ transform:translate(20px,-24px) scale(1.08); }
+  }
+
+  ::selection{ background:rgba(92,200,255,0.25); color:#fff; }
+
+  a{ color:var(--blue); }
+
+  .wrap, .topbar, footer{ position:relative; z-index:1; }
+
+  .wrap{ max-width:920px; margin:0 auto; padding:0 24px; }
+
+  .topbar{
+    border-bottom:1px solid var(--border-soft);
+    background:rgba(27,33,48,0.85);
+    backdrop-filter:blur(10px);
+    position:sticky; top:0; z-index:20;
+    position:relative;
+  }
+  .topbar::after{
+    content:''; position:absolute; bottom:-1px; left:0; right:0; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(92,200,255,0.5), rgba(199,146,234,0.5), transparent);
+  }
+  .topbar-inner{
+    max-width:920px; margin:0 auto; padding:16px 24px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{
+    width:30px; height:30px; border-radius:8px;
+    background:linear-gradient(135deg, var(--blue), var(--purple));
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-weight:700; font-size:14px; color:#0a0e14;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.08), 0 6px 18px -4px rgba(92,200,255,0.5);
+    transition:transform .4s ease;
+  }
+  .brand:hover .brand-mark{ transform:rotate(-8deg) scale(1.06); }
+  .brand-name{
+    font-family:var(--font-display); font-weight:700; font-size:16px; letter-spacing:0.2px;
+  }
+  .topbar-tag{
+    font-family:var(--font-mono); font-size:12px; color:var(--text-faint);
+  }
+
+  .hero{ padding:88px 0 32px; text-align:center; }
+  .hero h1{
+    font-family:var(--font-display); font-weight:700;
+    font-size:clamp(38px, 6vw, 58px); line-height:1.08; margin:0 0 18px;
+    letter-spacing:-1.4px;
+  }
+  .hero h1 .accent{
+    background:linear-gradient(90deg, var(--blue), var(--purple));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    position:relative;
+  }
+  .hero p{
+    color:var(--text-dim); font-size:16.5px; max-width:520px; margin:0 auto 36px;
+  }
+
+  .hero-preview{
+    max-width:460px; margin:0 auto; text-align:left;
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    box-shadow:0 30px 60px -25px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02) inset;
+    transform:perspective(900px) rotateX(2deg);
+    overflow:hidden;
+  }
+  .hero-preview .panel-tab{ padding:10px 16px; }
+  .hero-preview-body{
+    padding:16px 18px 18px;
+    font-family:var(--font-mono); font-size:12.5px; line-height:1.9;
+  }
+  .hp-line{ white-space:pre; }
+  .hp-key{ color:var(--purple); }
+  .hp-str{ color:var(--green); }
+  .hp-fn{ color:var(--blue); }
+  .hp-comment{ color:var(--text-faint); }
+  .hp-num{ color:var(--amber); }
+  .hp-result-row{
+    display:flex; align-items:center; gap:8px; margin-top:10px;
+    padding-top:10px; border-top:1px dashed var(--border);
+  }
+  .hp-result-row .tag{
+    font-weight:700; color:var(--coral);
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    margin-bottom:24px;
+    overflow:hidden;
+    box-shadow:0 1px 0 rgba(255,255,255,0.02) inset, 0 20px 40px -30px rgba(0,0,0,0.6);
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  .panel:focus-within{
+    border-color:rgba(92,200,255,0.4);
+    box-shadow:0 1px 0 rgba(255,255,255,0.02) inset, 0 0 0 3px rgba(92,200,255,0.08), 0 20px 40px -30px rgba(0,0,0,0.6);
+  }
+
+  .code-editor{ display:flex; }
+  .gutter{
+    font-family:var(--font-mono); font-size:13.5px; line-height:1.7;
+    color:var(--text-faint); text-align:right;
+    padding:0 12px 0 0; user-select:none;
+    border-right:1px solid var(--border-soft);
+    margin-right:12px;
+    white-space:pre;
+    overflow:hidden;
+    flex:0 0 auto;
+  }
+  .code-editor textarea{ flex:1 1 auto; }
+  .panel-tab{
+    display:flex; align-items:center; gap:10px;
+    padding:12px 18px;
+    background:var(--panel-alt);
+    border-bottom:1px solid var(--border);
+    font-family:var(--font-mono); font-size:13px; color:var(--text-dim);
+  }
+  .panel-tag{
+    display:flex; align-items:center; justify-content:center;
+    width:26px; height:20px; border-radius:5px;
+    background:rgba(92,200,255,0.1); border:1px solid rgba(92,200,255,0.3);
+    color:var(--blue);
+    font-family:var(--font-mono); font-size:11px; font-weight:600;
+    margin-right:2px;
+  }
+  .panel-label{ color:var(--text); font-weight:500; }
+
+  .panel-body{ padding:18px; }
+
+  textarea{
+    width:100%;
+    resize:vertical;
+    background:transparent;
+    border:none;
+    outline:none;
+    color:var(--text);
+    font-family:var(--font-mono);
+    font-size:13.5px;
+    line-height:1.7;
+  }
+  textarea::placeholder{ color:var(--text-faint); }
+
+  #problem{ font-family:var(--font-body); font-size:14.5px; }
+
+  .lang-row{
+    display:flex; gap:8px; padding:0 18px 14px;
+    border-bottom:1px solid var(--border-soft);
+    margin-bottom:14px;
+  }
+  .lang-pill{
+    font-family:var(--font-mono); font-size:12.5px;
+    padding:6px 14px; border-radius:100px;
+    border:1px solid var(--border);
+    background:var(--panel-alt);
+    color:var(--text-dim);
+    cursor:pointer;
+    transition:all .15s ease;
+    user-select:none;
+  }
+  .lang-pill:hover{ border-color:var(--text-faint); color:var(--text); }
+  .lang-pill.active[data-lang="cpp"]{ border-color:var(--blue); color:var(--blue); background:rgba(92,200,255,0.08); }
+  .lang-pill.active[data-lang="python"]{ border-color:var(--green); color:var(--green); background:rgba(110,231,168,0.08); }
+  .lang-pill.active[data-lang="java"]{ border-color:var(--amber); color:var(--amber); background:rgba(255,180,84,0.08); }
+
+  .run-row{ text-align:center; margin:8px 0 48px; }
+  .btn-run{
+    position:relative; overflow:hidden;
+    font-family:var(--font-mono); font-weight:600; font-size:14.5px;
+    color:#0a0e14;
+    background:linear-gradient(90deg, var(--blue), #8fd8ff);
+    border:none; padding:15px 36px; border-radius:10px;
+    cursor:pointer;
+    display:inline-flex; align-items:center; gap:10px;
+    box-shadow:0 0 0 1px rgba(92,200,255,0.3), 0 10px 30px -10px rgba(92,200,255,0.6);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-run::before{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%);
+    transform:translateX(-120%);
+    transition:transform .6s ease;
+  }
+  .btn-run:hover::before{ transform:translateX(120%); }
+  .btn-run:hover{ transform:translateY(-2px); box-shadow:0 0 0 1px rgba(92,200,255,0.5), 0 16px 36px -8px rgba(92,200,255,0.7); }
+  .btn-run:active{ transform:translateY(0); }
+  .btn-run:disabled{ opacity:0.7; cursor:progress; transform:none; }
+  .btn-run .play-icon{ width:0; height:0; border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid #0a0e14; }
+  .btn-run .cursor-blink{
+    display:inline-block; width:7px; height:14px; background:#0a0e14;
+    animation:blink 1s steps(1) infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  #resultSection{ padding-bottom:80px; }
+  .results-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:28px; flex-wrap:wrap; gap:8px;
+  }
+  .results-head h3{
+    font-family:var(--font-display); font-size:22px; margin:0;
+  }
+  .results-head .stamp{
+    font-family:var(--font-mono); font-size:12px; color:var(--text-faint);
+  }
+
+  .meter-card{
+    background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:22px 24px; margin-bottom:24px;
+  }
+  .meter-title{
+    font-family:var(--font-mono); font-size:12px; color:var(--text-dim);
+    text-transform:uppercase; letter-spacing:1px; margin-bottom:18px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .meter-title .badge-space{
+    font-family:var(--font-mono); font-size:11px; color:var(--purple);
+    border:1px solid rgba(199,146,234,0.35); background:rgba(199,146,234,0.08);
+    padding:3px 9px; border-radius:100px; text-transform:none; letter-spacing:0;
+  }
+  .meter-track{
+    position:relative; height:6px; border-radius:100px;
+    background:var(--border-soft);
+    margin:0 6px 14px;
+    overflow:visible;
+  }
+  .meter-fill{
+    position:absolute; top:0; left:0; height:100%; border-radius:100px;
+    background:linear-gradient(90deg, var(--green), var(--blue) 35%, var(--amber) 65%, var(--coral));
+    width:0%;
+    transition:width 0.7s cubic-bezier(.2,.8,.2,1);
+  }
+  .meter-dot{
+    position:absolute; top:50%; width:16px; height:16px; border-radius:50%;
+    background:#fff; border:3px solid var(--bg);
+    box-shadow:0 0 0 2px currentColor, 0 0 16px 2px currentColor, 0 4px 12px rgba(0,0,0,0.4);
+    transform:translate(-50%,-50%);
+    transition:left 0.7s cubic-bezier(.2,.8,.2,1);
+    animation:dot-pulse 2s ease-in-out infinite;
+  }
+  @keyframes dot-pulse{
+    0%,100%{ box-shadow:0 0 0 2px currentColor, 0 0 14px 2px currentColor, 0 4px 12px rgba(0,0,0,0.4); }
+    50%{ box-shadow:0 0 0 2px currentColor, 0 0 22px 6px currentColor, 0 4px 12px rgba(0,0,0,0.4); }
+  }
+  .meter-labels{
+    display:flex; justify-content:space-between;
+    font-family:var(--font-mono); font-size:11px; color:var(--text-faint);
+    padding:0 0;
+  }
+  .meter-labels span{ transition:color .3s ease; }
+  .meter-labels span.active{ color:var(--text); font-weight:600; }
+
+  .result-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:16px;
+  }
+  @media (max-width:680px){ .result-grid{ grid-template-columns:1fr; } }
+
+  @keyframes rise-in{
+    from{ opacity:0; transform:translateY(14px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .meter-card, .result-card{
+    animation:rise-in .5s ease both;
+  }
+  .result-card:nth-child(1){ animation-delay:.05s; }
+  .result-card:nth-child(2){ animation-delay:.1s; }
+  .result-card:nth-child(3){ animation-delay:.15s; }
+  .result-card:nth-child(4){ animation-delay:.2s; }
+  .result-card:nth-child(5){ animation-delay:.25s; }
+  .result-card:nth-child(6){ animation-delay:.3s; }
+
+  .result-card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:20px 22px;
+    transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  .result-card:hover{
+    transform:translateY(-3px);
+    border-color:var(--border-soft);
+    box-shadow:0 16px 32px -20px rgba(0,0,0,0.6);
+  }
+  .result-card.full{ grid-column:1 / -1; }
+  .result-card h5{
+    font-family:var(--font-mono); font-size:12px; text-transform:uppercase;
+    letter-spacing:1px; color:var(--text-dim); margin:0 0 10px;
+    display:flex; align-items:center; gap:9px;
+  }
+  .icon-badge{
+    width:24px; height:24px; border-radius:7px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px;
+  }
+  .result-card p{ margin:0; font-size:14.5px; color:var(--text); }
+  .result-card .prompt{ color:var(--green); font-family:var(--font-mono); margin-right:6px; }
+
+  .complexity-tag{
+    font-family:var(--font-mono); font-weight:700; font-size:20px;
+  }
+  .complexity-tag.o1, .complexity-tag.ologn{ color:var(--green); }
+  .complexity-tag.on, .complexity-tag.onlogn{ color:var(--blue); }
+  .complexity-tag.on2{ color:var(--amber); }
+  .complexity-tag.o2n, .complexity-tag.on3{ color:var(--coral); }
+
+  footer{
+    position:relative;
+    border-top:1px solid var(--border-soft);
+    padding:24px 0; text-align:center;
+    font-family:var(--font-mono); font-size:12px; color:var(--text-faint);
+  }
+  footer::before{
+    content:''; position:absolute; top:-1px; left:50%; transform:translateX(-50%);
+    width:120px; height:1px;
+    background:linear-gradient(90deg, transparent, var(--blue), transparent);
+    opacity:0.6;
+  }
+
+  .hidden{ display:none !important; }
+
+  /* Secondary buttons (history, dashboard, login, etc.) */
+  .btn-secondary{ transition:all .15s ease; }
+  .btn-secondary:hover{ border-color:var(--text-faint) !important; color:var(--text) !important; transform:translateY(-1px); }
+
+  /* Toast notifications — replaces jarring browser alert() popups */
+  #toastContainer{
+    position:fixed; bottom:24px; right:24px; z-index:200;
+    display:flex; flex-direction:column; gap:10px;
+    pointer-events:none;
+  }
+  .toast{
+    background:var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:12px 16px; max-width:340px; font-size:13.5px; color:var(--text);
+    box-shadow:0 12px 30px -10px rgba(0,0,0,0.6);
+    animation:toast-in .3s ease both;
+    pointer-events:auto;
+  }
+  .toast.error{ border-color:rgba(255,107,107,0.4); }
+  .toast.success{ border-color:rgba(110,231,168,0.4); }
+  @keyframes toast-in{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  @keyframes toast-out{
+    from{ opacity:1; transform:translateY(0); }
+    to{ opacity:0; transform:translateY(10px); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+
+<body>
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">λ</div>
+        <div class="brand-name">DSA Code Analyzer</div>
+      </div>
+      <div class="topbar-tag" style="display:flex; align-items:center; gap:16px;">
+        <span>complexity · pattern · optimization</span>
+        <button id="historyBtn" class="btn-secondary" style="font-family:var(--font-mono); font-size:12px; color:var(--text-dim); background:var(--panel-alt); border:1px solid var(--border); border-radius:6px; padding:6px 12px; cursor:pointer;">📜 history</button>
+        <button id="dashboardBtn" class="btn-secondary" style="font-family:var(--font-mono); font-size:12px; color:var(--text-dim); background:var(--panel-alt); border:1px solid var(--border); border-radius:6px; padding:6px 12px; cursor:pointer;">📊 dashboard</button>
+        <span id="authArea"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <div class="hero">
+      <h1>Know exactly what your <span class="accent">solution costs</span></h1>
+      <p>Paste your problem and code. Get the approach, the pattern, the real Big-O, and how to push it further.</p>
+
+      <div class="hero-preview" aria-hidden="true">
+        <div class="panel-tab">
+          <span class="panel-tag">{ }</span>
+          <span class="panel-label">preview.diff</span>
+        </div>
+        <div class="hero-preview-body">
+          <div class="hp-line"><span class="hp-comment">// before</span></div>
+          <div class="hp-line"><span class="hp-key">for</span> i <span class="hp-key">in</span> range(n):</div>
+          <div class="hp-line">  <span class="hp-key">for</span> j <span class="hp-key">in</span> range(n):</div>
+          <div class="hp-line">    <span class="hp-fn">check</span>(i, j)</div>
+          <div class="hp-result-row">
+            <span class="tag">O(n²)</span> <span class="hp-comment">detected — 2 nested loops</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Problem -->
+    <div class="panel">
+      <div class="panel-tab">
+        <span class="panel-tag" style="background:rgba(154,164,186,0.1); border-color:rgba(154,164,186,0.3); color:var(--text-dim);">#</span>
+        <span class="panel-label">problem.md</span>
+      </div>
+      <div class="panel-body">
+        <textarea id="problem" rows="4" placeholder="e.g. Given an array of integers, return indices of the two numbers that add up to a target..."></textarea>
+      </div>
+    </div>
+
+    <!-- Code -->
+    <div class="panel">
+      <div class="panel-tab">
+        <span class="panel-tag">&lt;/&gt;</span>
+        <span class="panel-label" id="fileLabel">solution.cpp</span>
+      </div>
+
+      <div class="lang-row" style="padding-top:14px;">
+        <div class="lang-pill active" data-lang="cpp">C++</div>
+        <div class="lang-pill" data-lang="python">Python</div>
+        <div class="lang-pill" data-lang="java">Java</div>
+      </div>
+
+      <div class="panel-body" style="padding-top:0;">
+        <div class="code-editor">
+          <div class="gutter" id="gutter">1</div>
+          <textarea id="code" rows="14" placeholder="Paste your solution here..." spellcheck="false"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="run-row">
+      <button id="analyzeBtn" class="btn-run">
+        <span class="play-icon"></span>
+        <span id="analyzeBtnLabel">run analysis</span>
+        <span class="cursor-blink"></span>
+      </button>
+      <button id="hintBtn" class="btn-run" style="background:linear-gradient(90deg, var(--amber), #ffd08a); margin-left:12px;">
+        <span>💡</span>
+        <span>give me a hint</span>
+      </button>
+    </div>
+
+    <!-- Prominent Compare Solutions callout -->
+    <div style="background:var(--panel); border:1px solid rgba(199,146,234,0.35); border-radius:14px; padding:22px 24px; margin-bottom:32px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;">
+      <div>
+        <div style="font-family:var(--font-display); font-weight:700; font-size:16px; margin-bottom:4px;">⚖️ Have 2-3 different solutions for the same problem?</div>
+        <div style="color:var(--text-dim); font-size:13.5px;">Paste them side-by-side and we'll tell you which one is actually the most efficient — no more guessing.</div>
+      </div>
+      <button id="compareCalloutBtn" class="btn-run" style="background:linear-gradient(90deg, var(--purple), #e0b3ff); flex-shrink:0;">
+        <span>Compare Solutions →</span>
+      </button>
+    </div>
+
+    <!-- Hint result (separate from full analysis) -->
+    <div id="hintSection" class="hidden" style="margin-bottom:32px;">
+      <div class="result-card full" style="border-color:rgba(255,180,84,0.4);">
+        <h5><span class="icon-badge" style="background:rgba(255,180,84,0.12); color:var(--amber);">💡</span>Hint (no spoilers)</h5>
+        <p><span class="prompt" style="color:var(--amber);">$</span><span id="hintText">-</span></p>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div id="resultSection" class="hidden">
+
+      <div class="results-head">
+        <h3>Analysis Result</h3>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <span class="stamp" id="timestamp">-</span>
+          <button id="copyBtn" class="btn-secondary" style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim); background:var(--panel-alt); border:1px solid var(--border); border-radius:6px; padding:5px 10px; cursor:pointer;">📋 copy</button>
+          <button id="resetBtn" class="btn-secondary" style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim); background:var(--panel-alt); border:1px solid var(--border); border-radius:6px; padding:5px 10px; cursor:pointer;">↺ new analysis</button>
+        </div>
+      </div>
+
+      <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-faint); margin:-18px 0 20px;">
+        ⚠ rule-based static analysis — not a substitute for manually verifying edge cases
+      </div>
+
+      <div class="meter-card">
+        <div class="meter-title">
+          <span>Time complexity scale</span>
+          <span class="badge-space" id="spaceBadge">space: -</span>
+        </div>
+        <div class="meter-track">
+          <div class="meter-fill" id="meterFill" style="width:0%;"></div>
+          <div class="meter-dot" id="meterDot" style="left:0%;"></div>
+        </div>
+        <div class="meter-labels">
+          <span id="lbl-o1">O(1)</span>
+          <span id="lbl-ologn">O(log n)</span>
+          <span id="lbl-on">O(n)</span>
+          <span id="lbl-onlogn">O(n log n)</span>
+          <span id="lbl-on2">O(n²)</span>
+          <span id="lbl-o2n">O(n³)+</span>
+        </div>
+      </div>
+
+      <div class="result-grid">
+
+        <div class="result-card">
+          <h5><span class="icon-badge" style="background:rgba(92,200,255,0.12); color:var(--blue);">🧠</span>Approach</h5>
+          <p id="approach">-</p>
+        </div>
+
+        <div class="result-card">
+          <h5><span class="icon-badge" style="background:rgba(199,146,234,0.12); color:var(--purple);">🎯</span>Pattern</h5>
+          <p id="pattern">-</p>
+        </div>
+
+        <div class="result-card">
+          <h5><span class="icon-badge" style="background:rgba(92,200,255,0.12); color:var(--blue);">⏱️</span>Time Complexity</h5>
+          <p><span class="complexity-tag" id="timeComplexity">-</span></p>
+        </div>
+
+        <div class="result-card">
+          <h5><span class="icon-badge" style="background:rgba(110,231,168,0.12); color:var(--green);">🏅</span>Code Quality</h5>
+          <p><span class="complexity-tag" id="qualityScore" style="color:var(--green);">-</span><span style="font-size:13px; color:var(--text-dim);"> / 10</span></p>
+        </div>
+
+        <div class="result-card">
+          <h5><span class="icon-badge" style="background:rgba(199,146,234,0.12); color:var(--purple);">💾</span>Space Complexity</h5>
+          <p><span class="complexity-tag" id="spaceComplexity">-</span></p>
+        </div>
+
+        <div class="result-card full">
+          <h5><span class="icon-badge" style="background:rgba(255,180,84,0.12); color:var(--amber);">🚀</span>Optimization</h5>
+          <p><span class="prompt">$</span><span id="optimization">-</span></p>
+        </div>
+
+        <div class="result-card full">
+          <h5><span class="icon-badge" style="background:rgba(110,231,168,0.12); color:var(--green);">🏅</span>Code Quality Notes</h5>
+          <p id="qualityNotes" style="color:var(--text-dim); font-size:13.5px;">-</p>
+        </div>
+
+        <div class="result-card full">
+          <h5><span class="icon-badge" style="background:rgba(255,107,107,0.12); color:var(--coral);">🧪</span>Edge Cases to Test</h5>
+          <ul id="edgeCasesList" style="margin:0; padding-left:18px; color:var(--text-dim); font-size:13.5px; line-height:1.9;"></ul>
+        </div>
+
+        <div class="result-card full">
+          <h5><span class="icon-badge" style="background:rgba(92,200,255,0.12); color:var(--blue);">💡</span>Explanation</h5>
+          <p><span class="prompt">$</span><span id="explanation">-</span></p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toastContainer"></div>
+
+  <!-- Compare Solutions Modal -->
+  <div id="compareOverlay" class="hidden" style="position:fixed; inset:0; background:rgba(10,14,20,0.75); backdrop-filter:blur(4px); z-index:100; display:flex; align-items:flex-start; justify-content:center; padding:40px 20px; overflow-y:auto;">
+    <div style="background:var(--panel); border:1px solid var(--border); border-top:3px solid var(--purple); border-radius:14px; max-width:640px; width:100%; box-shadow:0 40px 80px -20px rgba(0,0,0,0.7); margin-bottom:40px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border-soft);">
+        <h3 style="font-family:var(--font-display); margin:0; font-size:18px;">⚖️ Compare Solutions</h3>
+        <button id="closeCompareBtn" style="background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer;">✕</button>
+      </div>
+
+      <div style="padding:20px 22px;">
+        <textarea id="compareProblem" rows="2" placeholder="Problem (optional, shared across both solutions)" style="width:100%; padding:10px; margin-bottom:16px; background:var(--panel-alt); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--font-body); font-size:13px; outline:none; resize:vertical;"></textarea>
+
+        <div id="compareSlots" style="display:flex; flex-direction:column; gap:14px;">
+          <!-- Solution slots inserted by JS -->
+        </div>
+
+        <button id="compareRunBtn" class="btn-run" style="width:100%; justify-content:center; margin-top:18px;">
+          <span>compare</span>
+        </button>
+
+        <div id="compareResults" style="margin-top:20px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div id="authOverlay" class="hidden" style="position:fixed; inset:0; background:rgba(10,14,20,0.75); backdrop-filter:blur(4px); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--panel); border:1px solid var(--border); border-top:3px solid var(--blue); border-radius:14px; max-width:360px; width:100%; padding:26px; box-shadow:0 40px 80px -20px rgba(0,0,0,0.7);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+        <h3 id="authTitle" style="font-family:var(--font-display); margin:0; font-size:18px;">Log in</h3>
+        <button id="closeAuthBtn" style="background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer;">✕</button>
+      </div>
+
+      <input id="authUsername" placeholder="Username" style="width:100%; padding:10px 12px; margin-bottom:10px; background:var(--panel-alt); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--font-body); font-size:14px; outline:none;">
+      <input id="authPassword" type="password" placeholder="Password" style="width:100%; padding:10px 12px; margin-bottom:14px; background:var(--panel-alt); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--font-body); font-size:14px; outline:none;">
+
+      <p id="authError" class="hidden" style="color:var(--coral); font-size:12.5px; margin:-6px 0 12px;"></p>
+
+      <button id="authSubmitBtn" class="btn-run" style="width:100%; justify-content:center;">
+        <span id="authSubmitLabel">Log in</span>
+      </button>
+
+      <p style="text-align:center; margin:16px 0 0; font-size:13px; color:var(--text-dim);">
+        <span id="authToggleText">Don't have an account?</span>
+        <a href="#" id="authToggleLink" style="color:var(--blue);">Sign up</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Dashboard Side Panel -->
+  <div id="dashboardOverlay" class="hidden" style="position:fixed; inset:0; background:rgba(10,14,20,0.5); backdrop-filter:blur(2px); z-index:100;">
+    <div style="position:fixed; top:0; right:0; height:100vh; width:min(440px, 92vw); background:var(--panel); border-left:1px solid var(--border); border-top:3px solid var(--green); display:flex; flex-direction:column; box-shadow:-30px 0 60px -20px rgba(0,0,0,0.7);">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 22px; border-bottom:1px solid var(--border-soft); flex-shrink:0;">
+        <h3 style="font-family:var(--font-display); margin:0; font-size:18px;">📊 My Dashboard</h3>
+        <button id="closeDashboardBtn" style="background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <div id="dashboardContent" style="overflow-y:auto; padding:20px 22px; flex:1;">
+        <p style="color:var(--text-faint); font-family:var(--font-mono); font-size:13px;">Loading...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Modal -->
+  <div id="historyOverlay" class="hidden" style="position:fixed; inset:0; background:rgba(10,14,20,0.75); backdrop-filter:blur(4px); z-index:100; display:flex; align-items:flex-start; justify-content:center; padding:60px 20px;">
+    <div style="background:var(--panel); border:1px solid var(--border); border-top:3px solid var(--amber); border-radius:14px; max-width:760px; width:100%; max-height:80vh; display:flex; flex-direction:column; box-shadow:0 40px 80px -20px rgba(0,0,0,0.7);">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border-soft);">
+        <h3 style="font-family:var(--font-display); margin:0; font-size:18px;">📜 Analysis History</h3>
+        <button id="closeHistoryBtn" style="background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <div id="historyList" style="overflow-y:auto; padding:14px 22px;">
+        <p style="color:var(--text-faint); font-family:var(--font-mono); font-size:13px;">Loading...</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    built for people who read the constraints before the examples
+  </footer>
+
+<script>
+(function(){
+
+  var API_BASE = "https://dsa-analyzer-im50.onrender.com";
+  var BACKEND_URL = API_BASE + "/analyze";
+
+  // ---------- toast notifications (replaces jarring alert() popups) ----------
+  function showToast(message, type){
+    var container = document.getElementById('toastContainer');
+    var toast = document.createElement('div');
+    toast.className = 'toast' + (type ? ' ' + type : '');
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    setTimeout(function(){
+      toast.style.animation = 'toast-out .3s ease both';
+      setTimeout(function(){ toast.remove(); }, 280);
+    }, 4000);
+  }
+
+  // ---------- language pill state ----------
+  var selectedLang = 'cpp';
+  var fileNames = { cpp:'solution.cpp', python:'solution.py', java:'Solution.java' };
+  var pills = document.querySelectorAll('.lang-pill');
+  pills.forEach(function(p){
+    p.addEventListener('click', function(){
+      pills.forEach(function(x){ x.classList.remove('active'); });
+      p.classList.add('active');
+      selectedLang = p.getAttribute('data-lang');
+      document.getElementById('fileLabel').textContent = fileNames[selectedLang];
+    });
+  });
+
+  // ---------- line-number gutter sync ----------
+  var codeArea = document.getElementById('code');
+  var gutter = document.getElementById('gutter');
+  function updateGutter(){
+    var lineCount = codeArea.value.split('\n').length;
+    var nums = [];
+    for (var n=1; n<=lineCount; n++) nums.push(n);
+    gutter.textContent = nums.join('\n');
+  }
+  codeArea.addEventListener('input', updateGutter);
+  codeArea.addEventListener('scroll', function(){ gutter.scrollTop = codeArea.scrollTop; });
+  updateGutter();
+
+  // ---------- map backend's time-complexity STRING to a meter position ----------
+  // The backend (analyzer.py) returns plain strings like "O(n)", "O(n^2)",
+  // "O(n log n)", etc. We classify those strings here purely for the
+  // visual meter — the backend is still the source of truth for the value.
+  function classifyTime(raw){
+    var s = (raw || '').toLowerCase();
+    if (s.indexOf('n log n') > -1) return { cls:'onlogn', idx:3 };
+    if (s.indexOf('log n') > -1) return { cls:'ologn', idx:1 };
+    if (s.indexOf('n^3') > -1 || s.indexOf('higher') > -1) return { cls:'on3', idx:5 };
+    if (s.indexOf('n^2') > -1 || s.indexOf('n²') > -1) return { cls:'on2', idx:4 };
+    if (s.indexOf('n)') > -1 || s === 'o(n)') return { cls:'on', idx:2 };
+    if (s.indexOf('1)') > -1) return { cls:'o1', idx:0 };
+    return { cls:'on', idx:2 }; // fallback (e.g. "depends on recursion depth")
+  }
+
+  function classifySpace(raw){
+    var s = (raw || '').toLowerCase();
+    if (s.indexOf('n)') > -1) return 'on';
+    return 'o1';
+  }
+
+  // ---------- wire up hint button ----------
+  var hintBtn = document.getElementById('hintBtn');
+  var hintSection = document.getElementById('hintSection');
+
+  hintBtn.addEventListener('click', function(){
+    var code = document.getElementById('code').value.trim();
+    var problem = document.getElementById('problem').value.trim();
+
+    if (!code) {
+      document.getElementById('code').style.boxShadow = '0 0 0 2px rgba(255,107,107,0.5)';
+      document.getElementById('code').focus();
+      setTimeout(function(){ document.getElementById('code').style.boxShadow = 'none'; }, 1200);
+      return;
+    }
+
+    hintBtn.disabled = true;
+    hintBtn.querySelector('span:last-child').textContent = 'thinking…';
+
+    fetch(API_BASE + "/hint", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        problem: problem || '(no problem text given)',
+        code: code,
+        language: selectedLang
+      })
+    })
+      .then(function(response){
+        if (!response.ok) throw new Error('Backend returned status ' + response.status);
+        return response.json();
+      })
+      .then(function(r){
+        var hintCard = hintSection.querySelector('.result-card');
+        if (r.is_optimal) {
+          hintCard.style.borderColor = 'rgba(110,231,168,0.5)';
+          hintCard.querySelector('h5').innerHTML = '<span class="icon-badge" style="background:rgba(110,231,168,0.12); color:var(--green);">✅</span>Already Optimal';
+          document.getElementById('hintText').style.color = 'var(--green)';
+        } else {
+          hintCard.style.borderColor = 'rgba(255,180,84,0.4)';
+          hintCard.querySelector('h5').innerHTML = '<span class="icon-badge" style="background:rgba(255,180,84,0.12); color:var(--amber);">💡</span>Hint (no spoilers)';
+          document.getElementById('hintText').style.color = '';
+        }
+        document.getElementById('hintText').textContent = r.hint;
+        hintSection.classList.remove('hidden');
+        hintSection.scrollIntoView({ behavior:'smooth', block:'start' });
+      })
+      .catch(function(err){
+        console.error(err);
+        showToast('Unable to reach the backend for a hint. Make sure FastAPI is running.', 'error');
+      })
+      .finally(function(){
+        hintBtn.disabled = false;
+        hintBtn.querySelector('span:last-child').textContent = 'give me a hint';
+      });
+  });
+
+  // ---------- compare solutions ----------
+  var compareOverlay = document.getElementById('compareOverlay');
+  var compareSlots = document.getElementById('compareSlots');
+  var compareResults = document.getElementById('compareResults');
+  var SLOT_LABELS = ['A', 'B', 'C'];
+  var numSlots = 2;
+
+  function renderCompareSlots(){
+    var html = '';
+    for (var i = 0; i < numSlots; i++) {
+      html += '' +
+        '<div style="border:1px solid var(--border); border-radius:10px; overflow:hidden;">' +
+          '<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--panel-alt); font-family:var(--font-mono); font-size:12px; color:var(--text-dim);">' +
+            '<span>Solution ' + SLOT_LABELS[i] + '</span>' +
+            '<select class="compareLang" data-slot="' + i + '" style="background:var(--panel); color:var(--text-dim); border:1px solid var(--border); border-radius:6px; font-family:var(--font-mono); font-size:11px; padding:2px 6px;">' +
+              '<option value="cpp">C++</option><option value="python">Python</option><option value="java">Java</option>' +
+            '</select>' +
+          '</div>' +
+          '<textarea class="compareCode" data-slot="' + i + '" rows="6" placeholder="Paste solution ' + SLOT_LABELS[i] + ' here..." style="width:100%; padding:10px; background:transparent; border:none; color:var(--text); font-family:var(--font-mono); font-size:12.5px; outline:none; resize:vertical;"></textarea>' +
+        '</div>';
+    }
+    compareSlots.innerHTML = html;
+
+    if (numSlots < 3) {
+      compareSlots.innerHTML += '<button id="addSlotBtn" style="align-self:flex-start; background:none; border:1px dashed var(--border); color:var(--text-faint); border-radius:8px; padding:8px; cursor:pointer; font-family:var(--font-mono); font-size:12px;">+ add a third solution</button>';
+      document.getElementById('addSlotBtn').addEventListener('click', function(){
+        numSlots = 3;
+        renderCompareSlots();
+      });
+    }
+  }
+
+  document.getElementById('compareCalloutBtn').addEventListener('click', function(){
+    compareOverlay.classList.remove('hidden');
+    compareResults.innerHTML = '';
+    numSlots = 2;
+    renderCompareSlots();
+  });
+
+  document.getElementById('closeCompareBtn').addEventListener('click', function(){
+    compareOverlay.classList.add('hidden');
+  });
+
+  document.getElementById('compareRunBtn').addEventListener('click', function(){
+    var problem = document.getElementById('compareProblem').value.trim();
+    var codeAreas = compareSlots.querySelectorAll('.compareCode');
+    var langSelects = compareSlots.querySelectorAll('.compareLang');
+
+    var solutions = [];
+    for (var i = 0; i < codeAreas.length; i++) {
+      var code = codeAreas[i].value.trim();
+      if (code) {
+        solutions.push({ label: 'Solution ' + SLOT_LABELS[i], code: code, language: langSelects[i].value });
+      }
+    }
+
+    if (solutions.length < 2) {
+      compareResults.innerHTML = '<p style="color:var(--coral); font-family:var(--font-mono); font-size:12px;">Please fill in at least 2 solutions to compare.</p>';
+      return;
+    }
+
+    compareResults.innerHTML = '<p style="color:var(--text-faint); font-family:var(--font-mono); font-size:12px;">Comparing...</p>';
+
+    fetch(API_BASE + "/compare", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ problem: problem || '(no problem given)', solutions: solutions })
+    })
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        var html = '';
+        data.results.forEach(function(r){
+          var isBest = data.best_labels.indexOf(r.label) !== -1;
+          html += '' +
+            '<div style="border:1px solid ' + (isBest ? 'var(--green)' : 'var(--border)') + '; background:' + (isBest ? 'rgba(110,231,168,0.06)' : 'var(--panel-alt)') + '; border-radius:10px; padding:14px; margin-bottom:10px;">' +
+              '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
+                '<span style="font-weight:700; font-size:14px;">' + r.label + (isBest ? ' 🏆' : '') + '</span>' +
+                '<span style="font-family:var(--font-mono); font-size:12px; color:var(--text-faint);">' + r.language.toUpperCase() + '</span>' +
+              '</div>' +
+              '<div style="font-size:13px; color:var(--text-dim); margin-bottom:8px;">' + r.pattern + ' — ' + r.approach + '</div>' +
+              '<div style="display:flex; gap:16px; font-family:var(--font-mono); font-size:13px;">' +
+                '<span>TC: <span style="color:' + (isBest ? 'var(--green)' : 'var(--blue)') + ';">' + r.time_complexity + '</span></span>' +
+                '<span>SC: <span style="color:var(--purple);">' + r.space_complexity + '</span></span>' +
+              '</div>' +
+            '</div>';
+        });
+        if (data.best_labels.length > 1) {
+          html += '<p style="font-family:var(--font-mono); font-size:12px; color:var(--text-faint);">It\'s a tie between: ' + data.best_labels.join(', ') + '</p>';
+        }
+        compareResults.innerHTML = html;
+      })
+      .catch(function(){
+        compareResults.innerHTML = '<p style="color:var(--coral); font-family:var(--font-mono); font-size:12px;">Could not reach the backend.</p>';
+      });
+  });
+
+  // ---------- auth (login/signup/session) ----------
+  var authOverlay = document.getElementById('authOverlay');
+  var authArea = document.getElementById('authArea');
+  var isSignupMode = false;
+
+  function getCurrentUser(){
+    var raw = localStorage.getItem('dsa_user');
+    return raw ? JSON.parse(raw) : null;
+  }
+
+  function renderAuthArea(){
+    var user = getCurrentUser();
+    if (user) {
+      authArea.innerHTML =
+        '<span style="font-family:var(--font-mono); font-size:12px; color:var(--text-dim);">👤 ' + user.username + '</span> ' +
+        '<button id="logoutBtn" class="btn-secondary" style="font-family:var(--font-mono); font-size:12px; color:var(--text-dim); background:var(--panel-alt); border:1px solid var(--border); border-radius:6px; padding:6px 10px; cursor:pointer; margin-left:8px;">log out</button>';
+      document.getElementById('logoutBtn').addEventListener('click', function(){
+        localStorage.removeItem('dsa_user');
+        renderAuthArea();
+      });
+    } else {
+      authArea.innerHTML =
+        '<button id="loginOpenBtn" class="btn-secondary" style="font-family:var(--font-mono); font-size:12px; color:var(--text-dim); background:var(--panel-alt); border:1px solid var(--border); border-radius:6px; padding:6px 12px; cursor:pointer;">log in</button>';
+      document.getElementById('loginOpenBtn').addEventListener('click', function(){
+        isSignupMode = false;
+        setAuthMode();
+        authOverlay.classList.remove('hidden');
+      });
+    }
+  }
+
+  function setAuthMode(){
+    document.getElementById('authError').classList.add('hidden');
+    document.getElementById('authUsername').value = '';
+    document.getElementById('authPassword').value = '';
+    if (isSignupMode) {
+      document.getElementById('authTitle').textContent = 'Sign up';
+      document.getElementById('authSubmitLabel').textContent = 'Sign up';
+      document.getElementById('authToggleText').textContent = 'Already have an account?';
+      document.getElementById('authToggleLink').textContent = 'Log in';
+    } else {
+      document.getElementById('authTitle').textContent = 'Log in';
+      document.getElementById('authSubmitLabel').textContent = 'Log in';
+      document.getElementById('authToggleText').textContent = "Don't have an account?";
+      document.getElementById('authToggleLink').textContent = 'Sign up';
+    }
+  }
+
+  document.getElementById('closeAuthBtn').addEventListener('click', function(){
+    authOverlay.classList.add('hidden');
+  });
+
+  document.getElementById('authToggleLink').addEventListener('click', function(e){
+    e.preventDefault();
+    isSignupMode = !isSignupMode;
+    setAuthMode();
+  });
+
+  document.getElementById('authSubmitBtn').addEventListener('click', function(){
+    var username = document.getElementById('authUsername').value.trim();
+    var password = document.getElementById('authPassword').value;
+    var errorEl = document.getElementById('authError');
+
+    if (!username || !password) {
+      errorEl.textContent = 'Please fill in both fields.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    var endpoint = isSignupMode ? '/signup' : '/login';
+
+    fetch(API_BASE + endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: username, password: password })
+    })
+      .then(function(res){ return res.json(); })
+      .then(function(r){
+        if (!r.success) {
+          errorEl.textContent = r.message || 'Something went wrong.';
+          errorEl.classList.remove('hidden');
+          return;
+        }
+        localStorage.setItem('dsa_user', JSON.stringify({ user_id: r.user_id, username: r.username }));
+        authOverlay.classList.add('hidden');
+        renderAuthArea();
+      })
+      .catch(function(){
+        errorEl.textContent = 'Could not reach the backend.';
+        errorEl.classList.remove('hidden');
+      });
+  });
+
+  renderAuthArea();
+
+  // ---------- dashboard modal ----------
+  var dashboardOverlay = document.getElementById('dashboardOverlay');
+  var dashboardContent = document.getElementById('dashboardContent');
+
+  var PATTERN_TIPS = {
+    'Hashing': { why: "Turns O(n²) lookups into O(n) — one of the most frequently used techniques on LeetCode.", examples: [
+      { name: "Two Sum", url: "https://leetcode.com/problems/two-sum/" },
+      { name: "Contains Duplicate", url: "https://leetcode.com/problems/contains-duplicate/" },
+      { name: "Group Anagrams", url: "https://leetcode.com/problems/group-anagrams/" }
+    ]},
+    'Two Pointer': { why: "Essential for sorted-array problems — avoids nested loops entirely.", examples: [
+      { name: "Two Sum II (sorted)", url: "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/" },
+      { name: "Container With Most Water", url: "https://leetcode.com/problems/container-with-most-water/" }
+    ]},
+    'Sliding Window': { why: "The go-to technique for 'longest/shortest subarray/substring' problems.", examples: [
+      { name: "Longest Substring Without Repeating Characters", url: "https://leetcode.com/problems/longest-substring-without-repeating-characters/" },
+      { name: "Minimum Window Substring", url: "https://leetcode.com/problems/minimum-window-substring/" }
+    ]},
+    'Binary Search': { why: "Shows up far more often than just 'search in sorted array' — also used on answer spaces.", examples: [
+      { name: "Search in Rotated Sorted Array", url: "https://leetcode.com/problems/search-in-rotated-sorted-array/" },
+      { name: "Koko Eating Bananas", url: "https://leetcode.com/problems/koko-eating-bananas/" }
+    ]},
+    'Recursion': { why: "The foundation for backtracking, DP, and tree/graph problems — worth being fully comfortable with.", examples: [
+      { name: "Fibonacci Number", url: "https://leetcode.com/problems/fibonacci-number/" },
+      { name: "Binary Tree Inorder Traversal", url: "https://leetcode.com/problems/binary-tree-inorder-traversal/" }
+    ]},
+    'Sorting': { why: "Often the first step that makes a hard problem simple — many patterns rely on sorted input.", examples: [
+      { name: "Merge Intervals", url: "https://leetcode.com/problems/merge-intervals/" },
+      { name: "Meeting Rooms II", url: "https://leetcode.com/problems/meeting-rooms-ii/" }
+    ]},
+    'Brute Force': { why: "Good as a first working solution, but interviewers often ask you to optimize past it.", examples: [
+      { name: "Two Sum (try optimizing it)", url: "https://leetcode.com/problems/two-sum/" }
+    ]},
+    'Dynamic Programming': { why: "One of the highest-value topics for interviews — appears constantly in medium/hard problems.", examples: [
+      { name: "Climbing Stairs", url: "https://leetcode.com/problems/climbing-stairs/" },
+      { name: "House Robber", url: "https://leetcode.com/problems/house-robber/" },
+      { name: "Longest Common Subsequence", url: "https://leetcode.com/problems/longest-common-subsequence/" }
+    ]},
+    'Backtracking': { why: "Core technique for 'generate all combinations/permutations' style problems.", examples: [
+      { name: "Subsets", url: "https://leetcode.com/problems/subsets/" },
+      { name: "Permutations", url: "https://leetcode.com/problems/permutations/" },
+      { name: "N-Queens", url: "https://leetcode.com/problems/n-queens/" }
+    ]},
+    'Graph BFS': { why: "The standard approach for shortest-path/level-order problems on unweighted graphs.", examples: [
+      { name: "Number of Islands", url: "https://leetcode.com/problems/number-of-islands/" },
+      { name: "Rotting Oranges", url: "https://leetcode.com/problems/rotting-oranges/" }
+    ]},
+    'Graph DFS': { why: "Needed for connectivity, cycle detection, and traversal-heavy graph problems.", examples: [
+      { name: "Number of Islands", url: "https://leetcode.com/problems/number-of-islands/" },
+      { name: "Course Schedule", url: "https://leetcode.com/problems/course-schedule/" }
+    ]},
+    'Bit Manipulation': { why: "Occasionally the key to an O(1) space trick that avoids extra data structures entirely.", examples: [
+      { name: "Single Number", url: "https://leetcode.com/problems/single-number/" },
+      { name: "Counting Bits", url: "https://leetcode.com/problems/counting-bits/" }
+    ]},
+    'Heap / Priority Queue': { why: "Essential whenever you need the 'top K' or repeatedly-smallest/largest element.", examples: [
+      { name: "Kth Largest Element in an Array", url: "https://leetcode.com/problems/kth-largest-element-in-an-array/" },
+      { name: "Merge K Sorted Lists", url: "https://leetcode.com/problems/merge-k-sorted-lists/" }
+    ]},
+    'Trie': { why: "The standard structure for prefix-based search — autocomplete, dictionaries, word search.", examples: [
+      { name: "Implement Trie (Prefix Tree)", url: "https://leetcode.com/problems/implement-trie-prefix-tree/" },
+      { name: "Word Search II", url: "https://leetcode.com/problems/word-search-ii/" }
+    ]},
+    'Union-Find (Disjoint Set)': { why: "The cleanest way to handle 'are these connected?' and grouping problems.", examples: [
+      { name: "Number of Provinces", url: "https://leetcode.com/problems/number-of-provinces/" },
+      { name: "Redundant Connection", url: "https://leetcode.com/problems/redundant-connection/" }
+    ]},
+    'Fast & Slow Pointers': { why: "The O(1)-space trick for cycle detection and finding the middle of a linked list.", examples: [
+      { name: "Linked List Cycle", url: "https://leetcode.com/problems/linked-list-cycle/" },
+      { name: "Middle of the Linked List", url: "https://leetcode.com/problems/middle-of-the-linked-list/" }
+    ]},
+    "Kadane's Algorithm": { why: "The classic O(n) trick for 'maximum subarray sum' style problems.", examples: [
+      { name: "Maximum Subarray", url: "https://leetcode.com/problems/maximum-subarray/" }
+    ]},
+    'Matrix Traversal': { why: "Common in grid-based problems — spiral order, rotation, and in-place transforms.", examples: [
+      { name: "Spiral Matrix", url: "https://leetcode.com/problems/spiral-matrix/" },
+      { name: "Rotate Image", url: "https://leetcode.com/problems/rotate-image/" }
+    ]},
+    'Interval Merging': { why: "A frequent pattern for scheduling-style problems — sort first, then merge in one pass.", examples: [
+      { name: "Merge Intervals", url: "https://leetcode.com/problems/merge-intervals/" },
+      { name: "Insert Interval", url: "https://leetcode.com/problems/insert-interval/" }
+    ]},
+    'Topological Sort': { why: "Needed whenever there's a 'this must happen before that' dependency structure.", examples: [
+      { name: "Course Schedule", url: "https://leetcode.com/problems/course-schedule/" },
+      { name: "Course Schedule II", url: "https://leetcode.com/problems/course-schedule-ii/" }
+    ]},
+    'Segment Tree / Fenwick Tree': { why: "For fast range queries/updates — shows up in harder array problems.", examples: [
+      { name: "Range Sum Query - Mutable", url: "https://leetcode.com/problems/range-sum-query-mutable/" }
+    ]},
+    'Prefix Sum': { why: "Turns repeated range-sum queries from O(n) each into O(1) each after one pass of setup.", examples: [
+      { name: "Subarray Sum Equals K", url: "https://leetcode.com/problems/subarray-sum-equals-k/" }
+    ]},
+    'Monotonic Stack': { why: "The key trick for 'next greater/smaller element' style problems.", examples: [
+      { name: "Daily Temperatures", url: "https://leetcode.com/problems/daily-temperatures/" },
+      { name: "Next Greater Element I", url: "https://leetcode.com/problems/next-greater-element-i/" }
+    ]},
+    'Divide and Conquer': { why: "The foundation behind merge sort, quicksort, and several 'split the problem in half' techniques.", examples: [
+      { name: "Sort an Array", url: "https://leetcode.com/problems/sort-an-array/" }
+    ]},
+  };
+
+  function renderRecommendation(by_pattern){
+    var candidate = CORE_PATTERNS.find(function(p){ return !by_pattern[p]; });
+    if (!candidate || !PATTERN_TIPS[candidate]) return '';
+
+    var tip = PATTERN_TIPS[candidate];
+    var linksHtml = tip.examples.map(function(ex){
+      return '<a href="' + ex.url + '" target="_blank" rel="noopener" style="color:var(--blue); text-decoration:none; border-bottom:1px dashed rgba(92,200,255,0.4);">' + ex.name + '</a>';
+    }).join(' &nbsp;·&nbsp; ');
+
+    return '' +
+      '<div style="border:1px solid rgba(92,200,255,0.35); background:rgba(92,200,255,0.06); border-radius:10px; padding:16px; margin-top:16px;">' +
+        '<div style="font-family:var(--font-mono); font-size:12px; color:var(--blue); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">🎯 Recommended next: ' + candidate + '</div>' +
+        '<div style="font-size:13.5px; color:var(--text); margin-bottom:10px;">' + tip.why + '</div>' +
+        '<div style="font-size:12.5px; font-family:var(--font-mono); line-height:1.8;">' + linksHtml + '</div>' +
+      '</div>';
+  }
+
+  // Core patterns we expect a well-rounded DSA learner to have practiced.
+  // Anything with 0 (or very low) count here gets flagged as a weak area.
+  var CORE_PATTERNS = [
+    'Hashing', 'Two Pointer', 'Sliding Window', 'Binary Search', 'Recursion', 'Sorting',
+    'Dynamic Programming', 'Backtracking', 'Graph BFS', 'Graph DFS', 'Bit Manipulation',
+    'Heap / Priority Queue', 'Trie', 'Union-Find (Disjoint Set)', 'Fast & Slow Pointers',
+    "Kadane's Algorithm", 'Matrix Traversal', 'Interval Merging', 'Topological Sort',
+    'Segment Tree / Fenwick Tree', 'Prefix Sum', 'Monotonic Stack', 'Divide and Conquer',
+  ];
+
+  function loadDashboard(){
+    dashboardContent.innerHTML = '<p style="color:var(--text-faint); font-family:var(--font-mono); font-size:13px;">Loading...</p>';
+
+    var user = getCurrentUser();
+    var url = API_BASE + "/stats";
+    if (user) url += "?user_id=" + user.user_id;
+
+    fetch(url)
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if (!data.total) {
+          dashboardContent.innerHTML = '<p style="color:var(--text-faint); font-family:var(--font-mono); font-size:13px;">No analyses yet — solve a few problems to see your stats here.</p>';
+          return;
+        }
+
+        var maxCount = Math.max.apply(null, Object.values(data.by_pattern));
+        var html = '<div style="font-family:var(--font-mono); font-size:13px; color:var(--text-dim); margin-bottom:20px;">Total analyzed: <span style="color:var(--green); font-size:18px; font-weight:700;">' + data.total + '</span></div>';
+
+        // --- Last 7 days activity trend ---
+        var maxDayCount = Math.max(1, Math.max.apply(null, data.last_7_days.map(function(d){ return d.count; })));
+        html += '<div style="margin-bottom:24px;">';
+        html += '<div style="font-family:var(--font-mono); font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Last 7 days</div>';
+        html += '<div style="display:flex; align-items:flex-end; gap:8px; height:70px;">';
+        data.last_7_days.forEach(function(d){
+          var barHeight = Math.max(4, (d.count / maxDayCount) * 60);
+          var dayLabel = new Date(d.date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short' });
+          html += '' +
+            '<div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">' +
+              '<div style="font-family:var(--font-mono); font-size:10px; color:var(--text-faint);">' + (d.count || '') + '</div>' +
+              '<div style="width:100%; height:' + barHeight + 'px; background:linear-gradient(180deg, var(--blue), var(--purple)); border-radius:4px 4px 0 0; opacity:' + (d.count ? '1' : '0.25') + ';"></div>' +
+              '<div style="font-family:var(--font-mono); font-size:10px; color:var(--text-faint);">' + dayLabel + '</div>' +
+            '</div>';
+        });
+        html += '</div></div>';
+
+        // --- Pattern breakdown (clickable) ---
+        html += '<div style="margin-bottom:24px;">';
+        html += '<div style="font-family:var(--font-mono); font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">By pattern (click to see problems)</div>';
+        Object.keys(data.by_pattern).sort(function(a,b){ return data.by_pattern[b]-data.by_pattern[a]; }).forEach(function(pattern){
+          var count = data.by_pattern[pattern];
+          var pct = Math.max(6, (count / maxCount) * 100);
+          html += '' +
+            '<div class="pattern-bar" data-pattern="' + pattern + '" style="margin-bottom:12px; cursor:pointer;">' +
+              '<div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;"><span>' + pattern + '</span><span style="color:var(--text-faint); font-family:var(--font-mono);">' + count + '</span></div>' +
+              '<div style="height:8px; background:var(--border-soft); border-radius:100px; overflow:hidden;">' +
+                '<div style="height:100%; width:' + pct + '%; background:linear-gradient(90deg, var(--blue), var(--purple)); border-radius:100px;"></div>' +
+              '</div>' +
+            '</div>';
+        });
+        html += '</div>';
+
+        // --- Language breakdown ---
+        html += '<div style="margin-bottom:24px;">';
+        html += '<div style="font-family:var(--font-mono); font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">By language</div>';
+        html += '<div style="display:flex; gap:10px;">';
+        Object.keys(data.by_language).forEach(function(lang){
+          html += '<div style="flex:1; background:var(--panel-alt); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center;">' +
+            '<div style="font-family:var(--font-mono); font-size:11px; color:var(--text-faint); text-transform:uppercase;">' + lang + '</div>' +
+            '<div style="font-size:20px; font-weight:700; color:var(--text); margin-top:4px;">' + data.by_language[lang] + '</div>' +
+          '</div>';
+        });
+        html += '</div></div>';
+
+        // --- Weak areas ---
+        var weakAreas = CORE_PATTERNS.filter(function(p){ return !data.by_pattern[p]; });
+        if (weakAreas.length > 0) {
+          html += '<div style="border-top:1px solid var(--border-soft); padding-top:16px;">' +
+            '<div style="font-family:var(--font-mono); font-size:12px; color:var(--amber); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">⚠ Not practiced yet</div>' +
+            '<div style="display:flex; flex-wrap:wrap; gap:8px;">' +
+            weakAreas.map(function(w){
+              return '<span style="font-family:var(--font-mono); font-size:12px; color:var(--coral); border:1px solid rgba(255,107,107,0.3); background:rgba(255,107,107,0.08); padding:4px 10px; border-radius:100px;">' + w + '</span>';
+            }).join('') +
+            '</div></div>';
+        }
+
+        html += renderRecommendation(data.by_pattern);
+
+        // --- Pattern detail view (hidden until a bar is clicked) ---
+        html += '<div id="patternDetail" class="hidden" style="border-top:1px solid var(--border-soft); margin-top:16px; padding-top:16px;">' +
+          '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">' +
+            '<div id="patternDetailTitle" style="font-family:var(--font-mono); font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;"></div>' +
+            '<button id="closePatternDetail" style="background:none; border:none; color:var(--text-faint); cursor:pointer; font-size:14px;">✕ close</button>' +
+          '</div>' +
+          '<div id="patternDetailList"></div>' +
+        '</div>';
+
+        dashboardContent.innerHTML = html;
+
+        // Wire up click handlers for pattern bars (added after innerHTML replaces DOM)
+        dashboardContent.querySelectorAll('.pattern-bar').forEach(function(bar){
+          bar.addEventListener('click', function(){
+            showPatternDetail(bar.getAttribute('data-pattern'));
+          });
+        });
+      })
+      .catch(function(){
+        dashboardContent.innerHTML = '<p style="color:var(--coral); font-family:var(--font-mono); font-size:13px;">Could not load stats. Is the backend running?</p>';
+      });
+  }
+
+  function showPatternDetail(pattern){
+    var user = getCurrentUser();
+    var url = API_BASE + "/history?pattern=" + encodeURIComponent(pattern) + "&limit=50";
+    if (user) url += "&user_id=" + user.user_id;
+
+    var detailBox = document.getElementById('patternDetail');
+    var listBox = document.getElementById('patternDetailList');
+    document.getElementById('patternDetailTitle').textContent = pattern + ' — past problems';
+    detailBox.classList.remove('hidden');
+    listBox.innerHTML = '<p style="color:var(--text-faint); font-family:var(--font-mono); font-size:12px;">Loading...</p>';
+    detailBox.scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+    fetch(url)
+      .then(function(res){ return res.json(); })
+      .then(function(items){
+        if (!items.length) {
+          listBox.innerHTML = '<p style="color:var(--text-faint); font-family:var(--font-mono); font-size:12px;">No problems found.</p>';
+          return;
+        }
+        listBox.innerHTML = items.map(function(item){
+          var problemShort = item.problem.length > 60 ? item.problem.slice(0, 60) + '…' : item.problem;
+          return '<div style="padding:8px 0; border-bottom:1px solid var(--border-soft); font-size:13px; display:flex; justify-content:space-between; gap:10px;">' +
+            '<span>' + problemShort + '</span>' +
+            '<span style="font-family:var(--font-mono); font-size:11px; color:var(--text-faint); white-space:nowrap;">' + item.language.toUpperCase() + '</span>' +
+          '</div>';
+        }).join('');
+
+        // close button needs re-binding since content is inside a re-rendered container
+        var closeBtn = document.getElementById('closePatternDetail');
+        if (closeBtn) {
+          closeBtn.onclick = function(){ detailBox.classList.add('hidden'); };
+        }
+      })
+      .catch(function(){
+        listBox.innerHTML = '<p style="color:var(--coral); font-family:var(--font-mono); font-size:12px;">Could not load problems.</p>';
+      });
+  }
+
+  document.getElementById('dashboardBtn').addEventListener('click', function(){
+    dashboardOverlay.classList.remove('hidden');
+    loadDashboard();
+  });
+
+  document.getElementById('closeDashboardBtn').addEventListener('click', function(){
+    dashboardOverlay.classList.add('hidden');
+  });
+
+  dashboardOverlay.addEventListener('click', function(e){
+    if (e.target === dashboardOverlay) dashboardOverlay.classList.add('hidden');
+  });
+
+  // ---------- history modal ----------
+  var historyOverlay = document.getElementById('historyOverlay');
+  var historyList = document.getElementById('historyList');
+
+  function patternIcon(pattern){
+    var icons = {
+      'Hashing':'#️⃣', 'Binary Search':'🔍', 'Two Pointer':'👉', 'Sliding Window':'🪟',
+      'Recursion':'🔁', 'Sorting':'📶', 'Brute Force':'🐢', 'Single Pass':'➡️'
+    };
+    return icons[pattern] || '❔';
+  }
+
+  function loadHistory(){
+    historyList.innerHTML = '<p style="color:var(--text-faint); font-family:var(--font-mono); font-size:13px;">Loading...</p>';
+
+    var user = getCurrentUser();
+    var url = API_BASE + "/history";
+    if (user) url += "?user_id=" + user.user_id;
+
+    fetch(url)
+      .then(function(res){ return res.json(); })
+      .then(function(items){
+        if (!items.length) {
+          historyList.innerHTML = '<p style="color:var(--text-faint); font-family:var(--font-mono); font-size:13px;">No analyses yet — run one to see it here.</p>';
+          return;
+        }
+
+        var rows = items.map(function(item){
+          var date = new Date(item.created_at);
+          var timeStr = date.toLocaleString();
+          var problemShort = item.problem.length > 70 ? item.problem.slice(0, 70) + '…' : item.problem;
+
+          return '' +
+            '<div style="display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0; border-bottom:1px solid var(--border-soft);">' +
+              '<div style="flex:1; min-width:0;">' +
+                '<div style="font-size:14px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + problemShort + '</div>' +
+                '<div style="font-family:var(--font-mono); font-size:11px; color:var(--text-faint); margin-top:4px;">' + item.language.toUpperCase() + ' · ' + timeStr + '</div>' +
+              '</div>' +
+              '<div style="text-align:right; flex-shrink:0;">' +
+                '<div style="font-size:13px; color:var(--text-dim);">' + patternIcon(item.pattern) + ' ' + item.pattern + '</div>' +
+                '<div style="font-family:var(--font-mono); font-size:13px; color:var(--blue); margin-top:2px;">' + item.time_complexity + ' / ' + item.space_complexity + '</div>' +
+              '</div>' +
+            '</div>';
+        }).join('');
+
+        historyList.innerHTML = rows;
+      })
+      .catch(function(err){
+        historyList.innerHTML = '<p style="color:var(--coral); font-family:var(--font-mono); font-size:13px;">Could not load history. Is the backend running?</p>';
+      });
+  }
+
+  document.getElementById('historyBtn').addEventListener('click', function(){
+    historyOverlay.classList.remove('hidden');
+    loadHistory();
+  });
+
+  document.getElementById('closeHistoryBtn').addEventListener('click', function(){
+    historyOverlay.classList.add('hidden');
+  });
+
+  historyOverlay.addEventListener('click', function(e){
+    if (e.target === historyOverlay) historyOverlay.classList.add('hidden');
+  });
+
+  // ---------- copy + reset buttons ----------
+  document.getElementById('copyBtn').addEventListener('click', function(){
+    var summary =
+      "Approach: " + document.getElementById('approach').textContent + "\n" +
+      "Pattern: " + document.getElementById('pattern').textContent + "\n" +
+      "Time Complexity: " + document.getElementById('timeComplexity').textContent + "\n" +
+      "Space Complexity: " + document.getElementById('spaceComplexity').textContent + "\n" +
+      "Optimization: " + document.getElementById('optimization').textContent + "\n" +
+      "Explanation: " + document.getElementById('explanation').textContent;
+
+    navigator.clipboard.writeText(summary).then(function(){
+      var btn = document.getElementById('copyBtn');
+      var original = btn.textContent;
+      btn.textContent = '✓ copied';
+      setTimeout(function(){ btn.textContent = original; }, 1500);
+    }).catch(function(){
+      showToast('Could not copy automatically — please select the result text manually.', 'error');
+    });
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    document.getElementById('problem').value = '';
+    document.getElementById('code').value = '';
+    updateGutter();
+    resultSection.classList.add('hidden');
+    hintSection.classList.add('hidden');
+    document.getElementById('problem').focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // ---------- wire up button ----------
+  var btn = document.getElementById('analyzeBtn');
+  var resultSection = document.getElementById('resultSection');
+
+  btn.addEventListener('click', function(){
+    var code = document.getElementById('code').value.trim();
+    var problem = document.getElementById('problem').value.trim();
+
+    if (!code) {
+      document.getElementById('code').style.boxShadow = '0 0 0 2px rgba(255,107,107,0.5)';
+      document.getElementById('code').focus();
+      setTimeout(function(){ document.getElementById('code').style.boxShadow = 'none'; }, 1200);
+      return;
+    }
+
+    btn.disabled = true;
+    document.getElementById('analyzeBtnLabel').textContent = 'analyzing…';
+
+    fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        problem: problem || '(no problem text given)',
+        code: code,
+        language: selectedLang,
+        user_id: getCurrentUser() ? getCurrentUser().user_id : null
+      })
+    })
+      .then(function(response){
+        if (!response.ok) throw new Error('Backend returned status ' + response.status);
+        return response.json();
+      })
+      .then(function(r){
+        document.getElementById('approach').textContent = r.approach;
+        document.getElementById('pattern').textContent = r.pattern;
+
+        var timeInfo = classifyTime(r.time_complexity);
+        var timeEl = document.getElementById('timeComplexity');
+        timeEl.textContent = r.time_complexity;
+        timeEl.className = 'complexity-tag ' + timeInfo.cls;
+
+        var spaceCls = classifySpace(r.space_complexity);
+        var spaceEl = document.getElementById('spaceComplexity');
+        spaceEl.textContent = r.space_complexity;
+        spaceEl.className = 'complexity-tag ' + spaceCls;
+
+        document.getElementById('spaceBadge').textContent = 'space: ' + r.space_complexity;
+        document.getElementById('optimization').textContent = r.optimization;
+        document.getElementById('explanation').textContent = r.explanation;
+
+        if (r.code_quality) {
+          var qScore = r.code_quality.score;
+          var qEl = document.getElementById('qualityScore');
+          qEl.textContent = qScore;
+          qEl.style.color = qScore >= 8 ? 'var(--green)' : qScore >= 5 ? 'var(--amber)' : 'var(--coral)';
+          document.getElementById('qualityNotes').textContent = r.code_quality.notes.join(' ');
+        }
+
+        if (r.edge_cases) {
+          document.getElementById('edgeCasesList').innerHTML = r.edge_cases.map(function(ec){
+            return '<li>' + ec + '</li>';
+          }).join('');
+        }
+
+        var pct = (timeInfo.idx / 5) * 100;
+        document.getElementById('meterDot').style.left = pct + '%';
+        document.getElementById('meterFill').style.width = pct + '%';
+        document.getElementById('meterDot').style.color =
+          timeInfo.cls === 'o1' || timeInfo.cls === 'ologn' ? '#6ee7a8' :
+          timeInfo.cls === 'on' || timeInfo.cls === 'onlogn' ? '#5cc8ff' :
+          timeInfo.cls === 'on2' ? '#ffb454' : '#ff6b6b';
+
+        var labelIds = ['lbl-o1','lbl-ologn','lbl-on','lbl-onlogn','lbl-on2','lbl-o2n'];
+        labelIds.forEach(function(id, idx){
+          document.getElementById(id).classList.toggle('active', idx === timeInfo.idx);
+        });
+
+        document.getElementById('timestamp').textContent =
+          '$ analyzed ' + new Date().toLocaleTimeString();
+
+        resultSection.classList.remove('hidden');
+        resultSection.scrollIntoView({ behavior:'smooth', block:'start' });
+      })
+      .catch(function(err){
+        console.error(err);
+        showToast('Unable to reach the backend. Make sure FastAPI is running (uvicorn) and try again.', 'error');
+      })
+      .finally(function(){
+        btn.disabled = false;
+        document.getElementById('analyzeBtnLabel').textContent = 'run analysis';
+      });
+  });
+
+})();
+</script>
+
+</body>
+</html>
